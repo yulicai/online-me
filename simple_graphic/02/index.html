@@ -1,0 +1,122 @@
+<html>
+<head>
+  <title>Yuli|40.73.17.sg.02</title>
+   <link href="https://fonts.googleapis.com/css?family=Raleway:300,400,700" rel="stylesheet">
+   <style>
+      body {
+        font-family: 'Raleway', sans-serif;
+        background-color: #000;
+        color: #000;
+        margin: 0px;
+        overflow: hidden;
+      }
+      #info {
+        color: blue;
+        font-size: 18px;
+        line-height: 30px;
+        font-weight: 700;
+        position: absolute;
+        /*padding: 10px;*/
+        /*width: 100%;*/
+        opacity: 0.9;
+        right:-30px;
+        top:50%;
+        text-align: center;
+        transform: rotate(90deg);
+      }
+      #nav{
+        color: blue;
+        opacity: 0.9;
+        font-size: 16px;
+        line-height: 20px;
+        font-weight: 400;
+        position: absolute;
+        padding: 10px;
+        left: 40px;
+        bottom: 20px;
+       
+      }
+
+      a {
+         color: blue;
+        opacity: 0.9;
+        margin-right: 12px;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+    </style>
+</head>
+<body>
+   <div id="info">40.73.17.sg.02<br/>
+      THREE.JS  |  GLSL<br/>
+    </div>
+    <div id="nav">      
+      <a href="https://www.caiyuli.com">Home</a> 
+      <a href="http://www.caiyuli.com/work/simple-graphic/">SG-Series</a> 
+    </div>
+  <div id = "container"></div>
+  <script src="../js/three.js"></script>
+  <script id = "vertexShader" type = "x-shader/x-vertex">
+  void main() {
+        gl_Position = vec4( position, 1.0 );
+    }
+  </script>
+
+  <script id = "fragmentShader" type = "x-shader/x-fragment">
+  //experiment with shaping function and rotate functions
+
+  #ifdef GL_ES
+  precision mediump float;
+  #endif
+
+  uniform vec2 u_resolution;
+  uniform vec2 u_mouse;
+  uniform float u_time;
+
+  #define PI 3.1415926
+
+  float circleSDF(vec2 st, vec2 p, float d){
+      return length(st-p) * d;
+  }
+
+  float fill(float sdf, float w){
+      return 1.-step(w,sdf);
+  }
+
+  float stroke(float sdf, float w, float o){
+     return step(w-o,sdf) - step(w+o,sdf);
+  }
+
+  vec2 rotate(vec2 st, float angle){
+      return mat2(cos(angle),-sin(angle),sin(angle),cos(angle)) * st;
+  }
+
+
+  void main() {
+      vec2 st = gl_FragCoord.xy/u_resolution.xy;
+      st.x *= u_resolution.x/u_resolution.y;
+      st *= 5.;
+      vec2 st_f = fract(st);
+      vec2 st_i = floor(st);
+      float t = u_time * 0.5* PI;
+      // st_f = (mod(floor(t*.2),2.)*
+      //mod(st_i.y,2.)+mod(ceil(t*.2),2.)*
+      //mod(st_i.x,2.))*rotate(vec2(st_f.x-.5,st_f.y+.25),PI/4.);
+
+      // st_f = (mod(floor(t*.2),2.)*mod(st_i.y,2.)
+      //*rotate(vec2(st_f.x-.5,st_f.y+.25),PI/4.)+mod(ceil(t*.2),2.)
+      //*mod(st_i.x,2.)*rotate(vec2(st_f.x+0.25,st_f.y-0.5),-PI/4.));
+      st_f = (mod(floor(t*.2),2.)*mod(st_i.y,2.)*rotate(vec2(st_f.x+0.25,st_f.y-0.5),-PI/4.)+mod(ceil(t*.2),4.)*mod(st_i.x,2.)*rotate(vec2(st_f.x-.5,st_f.y+.25),PI/4.));
+  	float change = .3 * sin(t);
+      vec3 color = vec3(0.935*(1.-sin(2.*t)*.3),0.263*(1.-sin(2.*t)*.3),0.652*(1.-sin(2.*t)*.3));
+      float c1 = circleSDF(st_f - change, vec2(.5),2.);
+      float c2 = circleSDF(st_f + change, vec2(.5),2.);
+      float sdf = min(c1,c2);
+      color += vec3(0.077,0.718,0.900)*sdf;
+
+      gl_FragColor = vec4(color,1.0);
+  }
+  </script>
+<script src = "app.js"></script>
+</body>
+</html>
